@@ -6,6 +6,13 @@ import { authComplete, authRequest } from './yandex/api.js';
 import { Controller } from './yandex/Controller.js';
 import { sleep } from './utils.js';
 
+function clearline() {
+  if (process.stdout.isTTY) {
+    process.stdout.cursorTo(0);
+    process.stdout.clearLine(1);
+  }
+}
+
 async function run() {
   const conf = yandexConf.get();
 
@@ -19,14 +26,12 @@ async function run() {
 
     await new Promise((resolve) => {
       async function check() {
-        process.stdout.cursorTo(0);
-        process.stdout.clearLine(1);
+        clearline();
         process.stdout.write(`Awaiting authorization... ${++i}`);
 
         try {
           await authComplete(res.device_code);
-          process.stdout.cursorTo(0);
-          process.stdout.clearLine(1);
+          clearline();
           console.log('Successful authorized!');
           resolve(true);
         } catch (e) {
