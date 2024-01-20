@@ -92,6 +92,8 @@ export class Controller {
   }
 
   add(data: Yandex.ApiDevice, room: Yandex.ApiRoom | null = null) {
+    if (data.type != 'devices.types.light') return;
+
     const device = new Device(data, room, this);
 
     this.devices.set(data.id, device);
@@ -101,6 +103,7 @@ export class Controller {
   }
 
   update(id: Yandex.ApiDevice['id'], data: Yandex.ApiDevice, room: Yandex.ApiRoom | null = null) {
+    if (data.type != 'devices.types.light') return;
     this.devices.get(id)?.update(data, room);
     this.save();
   }

@@ -1,8 +1,9 @@
-import { Characteristic, Service, ColorUtils } from 'hap-nodejs';
+import { Characteristic, Service } from 'hap-nodejs';
 import { type Device } from './Device.js';
 import { YandexCapability } from '../types/enums.js';
 import { Adapter, AdapterActive, AdapterBoolean, AdapterBrightness, AdapterColorModel, AdapterColorTemperature } from './Adapters.js';
 import _ from 'lodash';
+import { hsToTemp, tempToHS } from '../utils.js';
 
 type GetCapability<T extends YandexCapability, U = Yandex.Capability> = U extends { type: T } ? U : never;
 
@@ -202,23 +203,25 @@ export class CapabilityColorSetting extends Capability<YandexCapability.Color_se
   declare characteristics: {
     hue: Characteristic;
     saturation: Characteristic;
+    temp: Characteristic;
   };
 
   value = {
+    temp: 0,
     hue: 0,
     saturation: 0,
     updated_at: 0,
   };
 
   getValue(state: Yandex.CapabilityState[YandexCapability.Color_setting]) {
-    if (state?.instance === 'rgb' || state?.instance === 'hsv') {
+    if (state?.instance === 'temperature_k') {
+      const temp = this.adapters.temperature_k.homekit(state.value);
+      const { hue, saturation } = tempToHS(temp);
+      return { hue, saturation, temp };
+    } else if (state?.instance === 'rgb' || state?.instance === 'hsv') {
       const { hue, saturation } = this.adapters.color_model.homekit(state);
-      return { hue, saturation };
-    } else if (state?.instance === 'temperature_k') {
-      const { hue, saturation } = ColorUtils.colorTemperatureToHueAndSaturation(
-        this.adapters.temperature_k.homekit(state.value)
-      );
-      return { hue, saturation };
+      const temp = hsToTemp(hue, saturation);
+      return { hue, saturation, temp };
     } else {
       return null;
     }
@@ -227,10 +230,10 @@ export class CapabilityColorSetting extends Capability<YandexCapability.Color_se
   initialize() {
     this.service = this._device.setService(Service.Lightbulb);
 
-
     this.characteristics = {
       hue: this.service.getCharacteristic(Characteristic.Hue),
       saturation: this.service.getCharacteristic(Characteristic.Saturation),
+      temp: this.service.getCharacteristic(Characteristic.ColorTemperature),
     };
     this.adapters = {
       temperature_k: new AdapterColorTemperature(this._capablility.parameters),
@@ -240,21 +243,35 @@ export class CapabilityColorSetting extends Capability<YandexCapability.Color_se
     const value = this.getValue(this._capablility.state);
 
     if (value) {
+      if (value.temp) this.characteristics.hue.setValue(value.hue);
       this.characteristics.hue.setValue(value.hue);
       this.characteristics.saturation.setValue(value.saturation);
-      this.value = { ...value, updated_at: Date.now() };
+      this.value = { ...this.value, ...value, updated_at: Date.now() };
     }
 
     const setState = _.debounce(() => this.setState(), 400, { maxWait: 700 });
 
+    this.characteristics.temp
+      .onGet(() => {
+        return this.value.temp || 140;
+      })
+      .onSet(rawValue => {
+        const temp = rawValue as number;
+
+        const value = this.adapters.temperature_k.yandex(temp);
+
+        this.value.updated_at = Date.now();
+        this.value.temp = temp;
+        this._capablility.state = {
+          instance: 'temperature_k',
+          value: value
+        };
+
+        setState();
+      });
+
     this.characteristics.hue
       .onGet(() => {
-        const value = this.getValue(this._capablility.state);
-
-        if (value) {
-          return value.hue;
-        }
-
         return this.value.hue;
       })
       .onSet(rawValue => {
@@ -262,9 +279,11 @@ export class CapabilityColorSetting extends Capability<YandexCapability.Color_se
         const saturation = this.value.saturation as number;
 
         const state = this.adapters.color_model.yandex({ hue, saturation });
+        const temp = hsToTemp(hue, saturation);
 
         this.value.updated_at = Date.now();
         this.value.hue = hue;
+        this.value.temp = temp;
         this._capablility.state = state;
 
         setState();
@@ -272,12 +291,6 @@ export class CapabilityColorSetting extends Capability<YandexCapability.Color_se
 
     this.characteristics.saturation
       .onGet(() => {
-        const value = this.getValue(this._capablility.state);
-
-        if (value) {
-          return value.saturation;
-        }
-
         return this.value.saturation;
       })
       .onSet(rawValue => {
@@ -285,9 +298,11 @@ export class CapabilityColorSetting extends Capability<YandexCapability.Color_se
         const saturation = rawValue as number;
 
         const state = this.adapters.color_model.yandex({ hue, saturation });
+        const temp = hsToTemp(hue, saturation);
 
         this.value.updated_at = Date.now();
         this.value.saturation = saturation;
+        this.value.temp = temp;
         this._capablility.state = state;
 
         setState();
@@ -301,8 +316,12 @@ export class CapabilityColorSetting extends Capability<YandexCapability.Color_se
       if (value) {
         this.value = { ...value, updated_at: Date.now() };
 
-        this.characteristics.hue.updateValue(value.hue);
-        this.characteristics.saturation.updateValue(value.saturation);
+        if (this.value.temp) {
+          this.characteristics.temp.updateValue(value.temp);
+        } else {
+          this.characteristics.hue.updateValue(value.hue);
+          this.characteristics.saturation.updateValue(value.saturation);
+        }
       }
     }
   }
@@ -312,7 +331,9 @@ export class CapabilityColorSetting extends Capability<YandexCapability.Color_se
       await this._device.setState([
         {
           type: YandexCapability.Color_setting,
-          state: this.adapters.color_model.yandex(this.value)
+          state: this.value.temp
+            ? { instance: 'temperature_k', value: this.adapters.temperature_k.yandex(this.value.temp) }
+            : this.adapters.color_model.yandex(this.value)
         }
       ]);
     } catch (e) {}

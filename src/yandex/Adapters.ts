@@ -138,13 +138,13 @@ export class AdapterColorModel extends Adapter<
 export class AdapterColorTemperature extends Adapter<number, number, YandexCapability.Color_setting> {
   yandex(value: number): number {
     if (this.params.temperature_k?.max != null && this.params.temperature_k?.min != null) {
-      return scaleRange(value, { min: 140, max: 500 }, this.params.temperature_k);
+      return Math.round(scaleRange(value, { min: 500, max: 140 }, this.params.temperature_k));
     }
     return value;
   }
   homekit(value: number): number {
     if (this.params.temperature_k?.max != null && this.params.temperature_k?.min != null) {
-      return scaleRange(value, this.params.temperature_k, { min: 140, max: 500 });
+      return scaleRange(value, this.params.temperature_k, { min: 500, max: 140 });
     }
     return value;
   }
