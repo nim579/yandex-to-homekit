@@ -1,4 +1,4 @@
-import { Characteristic, Service } from 'hap-nodejs';
+import { Characteristic, Service, WithUUID } from 'hap-nodejs';
 import { type Device } from './Device.js';
 import { YandexCapability } from '../types/enums.js';
 import { Adapter, AdapterActive, AdapterBoolean, AdapterBrightness, AdapterColorModel, AdapterColorTemperature } from './Adapters.js';
@@ -35,7 +35,7 @@ export class CapabilityOnOff extends Capability<YandexCapability.On_Off> {
   declare adapter: Adapter;
 
   get _defaultService() { return Service.Switch; }
-  get _services(): { [D in Yandex.DeviceType]?: new (...args: any[])=> Service } {
+  get _services(): { [D in Yandex.DeviceType]?: typeof Service } {
     return {
       'devices.types.thermostat.ac': Service.HeaterCooler,
       'devices.types.media_device.tv': Service.Television,
@@ -46,7 +46,7 @@ export class CapabilityOnOff extends Capability<YandexCapability.On_Off> {
   }
 
   get _defaultAdapter() { return AdapterBoolean; }
-  get _adapters(): { [D in Yandex.DeviceType]?: typeof Adapter<any, any> } {
+  get _adapters(): { [D in Yandex.DeviceType]?: new (...args: any[])=> Adapter<any, any> } {
     return {
       'devices.types.thermostat.ac': AdapterActive,
       'devices.types.media_device.tv': AdapterActive,
@@ -54,7 +54,7 @@ export class CapabilityOnOff extends Capability<YandexCapability.On_Off> {
     };
   }
 
-  get _characteristics(): { [D in Yandex.DeviceType]?: new (...args: any[])=> Characteristic } {
+  get _characteristics(): { [D in Yandex.DeviceType]?: WithUUID<new ()=> Characteristic> } {
     return {
       'devices.types.thermostat.ac': Characteristic.Active,
       'devices.types.media_device.tv': Characteristic.Active,
@@ -130,7 +130,7 @@ export class CapabilityRange extends Capability<YandexCapability.Range> {
   declare adapter: Adapter;
   declare characteristic?: Characteristic;
 
-  get _brightnessServices(): { [D in Yandex.DeviceType]?: new (...args: any[])=> Service } {
+  get _brightnessServices(): { [D in Yandex.DeviceType]?: typeof Service } {
     return {
       'devices.types.media_device.tv': Service.Television,
       'devices.types.light': Service.Lightbulb,

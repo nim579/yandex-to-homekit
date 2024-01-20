@@ -219,7 +219,7 @@ declare global {
     type ApiDevice = {
       id: string;
       name: string;
-      type: string;
+      type: DeviceType;
       aliases: string[];
       external_id: string;
       skill_id: string;

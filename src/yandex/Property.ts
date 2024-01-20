@@ -18,9 +18,9 @@ export abstract class Property<T extends YandexProperty, I extends Yandex.Instan
   protected _capablility: GetProperty<T>;
   protected _adapter: Adapter;
 
-  abstract get _defaultService(): new (...args: any[])=> Service;
+  abstract get _defaultService(): typeof Service;
 
-  get _services(): { [D in Yandex.DeviceType]?: new (...args: any[])=> Service } {
+  get _services(): { [D in Yandex.DeviceType]?: typeof Service } {
     return {};
   }
 

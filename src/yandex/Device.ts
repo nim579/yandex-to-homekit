@@ -53,7 +53,9 @@ export class Device {
     return this._device.type;
   }
   get category() {
-    return categoriesMap[this.type] || Categories.OTHER;
+    return categoriesMap[this.type] || this.type.startsWith('devices.types.hub')
+      ? Categories.BRIDGE
+      : Categories.OTHER;
   }
   get pin() {
     return textToPin(this.id);
