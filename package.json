@@ -1,0 +1,35 @@
+{
+  "name": "yandex-to-homekit",
+  "version": "0.0.0",
+  "description": "",
+  "type": "module",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "start:dev": "ts-node ./src/index",
+    "start": "node .",
+    "postinstall": "npm run build"
+  },
+  "author": "Nick Iv",
+  "license": "MIT",
+  "dependencies": {
+    "date-fns": "^3.2.0",
+    "got": "^13.0.0",
+    "hap-nodejs": "^0.11.1",
+    "home-folder": "^1.0.0",
+    "lodash": "^4.17.21",
+    "macaddress": "^0.5.3",
+    "qrcode-terminal": "^0.12.0"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.202",
+    "@types/node": "^20.11.5",
+    "@types/qrcode-terminal": "^0.12.2",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "eslint": "^8.56.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

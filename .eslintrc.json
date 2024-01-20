@@ -1,0 +1,52 @@
+{
+	"env": {
+		"es6": true,
+		"node": true,
+		"mocha": true,
+		"browser": true
+	},
+	"extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
+	"parserOptions": {
+		"sourceType": "module",
+		"ecmaVersion": 2018
+	},
+	"rules": {
+		"indent": [
+			"error",
+			2
+		],
+		"linebreak-style": [
+			"error",
+			"unix"
+		],
+		"quotes": [
+			"error",
+			"single"
+		],
+		"semi": [
+			"error",
+			"always"
+		],
+		"no-cond-assign": "off",
+		"no-empty": [
+			"error",
+			{ "allowEmptyCatch": true }
+		],
+		"space-before-function-paren": ["error", {
+			"anonymous": "never",
+			"named": "never",
+			"asyncArrow": "always"
+		}],
+
+		"no-console": "warn",
+
+		"@typescript-eslint/type-annotation-spacing": [
+			"error",
+			{ "before": false, "after": true }
+		],
+    "@typescript-eslint/no-explicit-any": "off"
+	},
+	"ignorePatterns": ["dev/*.js", "**/*.coffee"]
+}
