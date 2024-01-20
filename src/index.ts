@@ -7,7 +7,7 @@ import { Controller } from './yandex/Controller.js';
 import { sleep } from './utils.js';
 
 function clearline() {
-  if (process.stdout.isTTY) {
+  if (process.stdout.isTTY && process.stdout.cursorTo) {
     process.stdout.cursorTo(0);
     process.stdout.clearLine(1);
   }
